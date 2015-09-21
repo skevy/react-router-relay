@@ -1,12 +1,14 @@
-import React from 'react';
+import createContainer from './Container';
 
-import Container from './Container';
+export default function createCreateElement(React) {
+  const Container = createContainer(React);
 
-export default function createElement(Component, props) {
-  return (
-    <Container
-      Component={Component}
-      {...props}
-    />
-  );
+  return function createElement(Component, props) {
+    return (
+      <Container
+        Component={Component}
+        {...props}
+      />
+    );
+  };
 }

@@ -1,61 +1,65 @@
-import React from 'react';
 import Relay from 'react-relay';
 
-import Container from './Container';
 import RouteAggregator from './RouteAggregator';
 
-export default class RootComponent extends React.Component {
-  static displayName = 'ReactRouterRelay.RootComponent';
+export default function createRootComponent(React, Container) {
+  class RootComponent extends React.Component {
+    static displayName = 'ReactRouterRelay.RootComponent';
 
-  static childContextTypes = {
-    routeAggregator: React.PropTypes.instanceOf(RouteAggregator).isRequired,
-  };
-
-  constructor(props, context) {
-    super(props, context);
-
-    this._routeAggregator = new RouteAggregator();
-    this._routeAggregator.updateRoute(props);
-  }
-
-  getChildContext() {
-    return {
-      routeAggregator: this._routeAggregator,
+    static childContextTypes = {
+      routeAggregator: React.PropTypes.instanceOf(RouteAggregator).isRequired,
     };
+
+    constructor(props, context) {
+      super(props, context);
+
+      this._routeAggregator = new RouteAggregator();
+      this._routeAggregator.updateRoute(props);
+    }
+
+    getChildContext() {
+      return {
+        routeAggregator: this._routeAggregator,
+      };
+    }
+
+    componentWillReceiveProps(nextProps) {
+      if (this.props.routes !== nextProps.routes) {
+        this._routeAggregator.updateRoute(nextProps);
+      }
+    }
+
+    renderLoading = () => {
+      this._routeAggregator.setLoading();
+      return this.renderComponent();
+    };
+
+    renderFetched = (data) => {
+      this._routeAggregator.setFetched(data);
+      return this.renderComponent();
+    };
+
+    renderFailure = (error, retry) => {
+      this._routeAggregator.setFailure(error, retry);
+      return this.renderComponent();
+    };
+
+    renderComponent() {
+      return <Container {...this.props} />;
+    }
+
+    render() {
+      return (
+        <Relay.RootContainer
+          Component={this._routeAggregator}
+          route={this._routeAggregator.route}
+          renderLoading={this.renderLoading}
+          renderFetched={this.renderFetched}
+          renderFailure={this.renderFailure}
+        />
+      );
+    }
   }
 
-  componentWillReceiveProps(nextProps) {
-    this._routeAggregator.updateRoute(nextProps);
-  }
-
-  renderLoading = () => {
-    this._routeAggregator.setLoading();
-    return this.renderComponent();
-  };
-
-  renderFetched = (data) => {
-    this._routeAggregator.setFetched(data);
-    return this.renderComponent();
-  };
-
-  renderFailure = (error, retry) => {
-    this._routeAggregator.setFailure(error, retry);
-    return this.renderComponent();
-  };
-
-  renderComponent() {
-    return <Container {...this.props} />;
-  }
-
-  render() {
-    return (
-      <Relay.RootContainer
-        Component={this._routeAggregator}
-        route={this._routeAggregator.route}
-        renderLoading={this.renderLoading}
-        renderFetched={this.renderFetched}
-        renderFailure={this.renderFailure}
-      />
-    );
-  }
+  return RootComponent;
 }

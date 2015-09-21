@@ -4,6 +4,7 @@
   "description": "Nested react-router routes for Relay",
   "files": [
     "lib",
+    "native.js",
     "LICENSE",
     "README.md"
   ],
