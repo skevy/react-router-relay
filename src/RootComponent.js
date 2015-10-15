@@ -6,6 +6,10 @@ export default function createRootComponent(React, Container) {
   class RootComponent extends React.Component {
     static displayName = 'ReactRouterRelay.RootComponent';
 
+    static propTypes = {
+      routes: React.PropTypes.array.isRequired,
+    };
+
     static childContextTypes = {
       routeAggregator: React.PropTypes.instanceOf(RouteAggregator).isRequired,
     };
@@ -24,9 +28,11 @@ export default function createRootComponent(React, Container) {
     }
 
     componentWillReceiveProps(nextProps) {
-      if (this.props.routes !== nextProps.routes) {
-        this._routeAggregator.updateRoute(nextProps);
+      if (nextProps.routes === this.props.routes) {
+        return;
       }
+
+      this._routeAggregator.updateRoute(nextProps);
     }
 
     renderLoading = () => {

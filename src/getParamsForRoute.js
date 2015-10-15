@@ -1,7 +1,23 @@
+import invariant from 'invariant';
+
 import getRouteParams from 'react-router/lib/getRouteParams';
 
-export default function getParamsForRoute({route, routes, params, location}) {
+function getLocationParams(paramNames, paramSource) {
+  if (!paramNames) {
+    return null;
+  }
+
   const paramsForRoute = {};
+  paramNames.forEach(name => {
+    const param = paramSource ? paramSource[name] : null;
+    paramsForRoute[name] = param !== undefined ? param : null;
+  });
+
+  return paramsForRoute;
+}
+
+export default function getParamsForRoute({route, routes, params, location}) {
+  let paramsForRoute = {};
 
   // Extract route params for current route and all ancestors.
   for (const ancestorRoute of routes) {
@@ -11,17 +27,23 @@ export default function getParamsForRoute({route, routes, params, location}) {
     }
   }
 
-  // Extract specified routes from query.
-  if (route.queryParams) {
-    // Can't use destructuring default value here, because location.query is
-    // null when no query string is present.
-    const query = location.query || {};
+  Object.assign(
+    paramsForRoute,
+    getLocationParams(route.queryParams, location.query),
+    getLocationParams(route.stateParams, location.state)
+  );
 
-    route.queryParams.forEach(queryParam => {
-      const queryValue = query[queryParam];
-      paramsForRoute[queryParam] =
-        queryValue !== undefined ? queryValue : null;
-    });
+  const {prepareParams} = route;
+  if (prepareParams) {
+    invariant(
+      typeof prepareParams === 'function',
+      'react-router-relay: Expected `prepareParams` to be a function.'
+    );
+    paramsForRoute = prepareParams(paramsForRoute, route);
+    invariant(
+      typeof paramsForRoute === 'object' && paramsForRoute !== null,
+      'react-router-relay: Expected `prepareParams` to return an object.'
+    );
   }
 
   return paramsForRoute;
